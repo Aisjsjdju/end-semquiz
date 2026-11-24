@@ -1,0 +1,3046 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cyber Quiz Arena — Interactive Cybersecurity MCQ Trainer</title>
+  <!-- Optional web fonts with graceful offline system font fallbacks -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ==========================================================================
+       DESIGN TOKENS & THEME VARIABLES
+       ========================================================================== */
+    :root {
+      --bg-obsidian: #050812;
+      --bg-navy: #0a1024;
+      --bg-card: rgba(15, 23, 46, 0.72);
+      --bg-card-solid: #0f172e;
+      --bg-card-hover: rgba(24, 36, 70, 0.85);
+      --border-glass: rgba(139, 92, 246, 0.22);
+      --border-bright: rgba(56, 189, 248, 0.45);
+
+      --neon-purple: #8b5cf6;
+      --neon-purple-bright: #a78bfa;
+      --neon-blue: #3b82f6;
+      --neon-cyan: #06b6d4;
+      --neon-pink: #ec4899;
+
+      --success: #10b981;
+      --success-bg: rgba(16, 185, 129, 0.14);
+      --success-border: rgba(16, 185, 129, 0.65);
+
+      --danger: #ef4444;
+      --danger-bg: rgba(239, 68, 68, 0.14);
+      --danger-border: rgba(239, 68, 68, 0.65);
+
+      --warning: #f59e0b;
+      --warning-bg: rgba(245, 158, 11, 0.14);
+
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+
+      --gradient-primary: linear-gradient(135deg, #7c3aed 0%, #3b82f6 55%, #06b6d4 100%);
+      --gradient-purple: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+      --gradient-blue: linear-gradient(135deg, #2563eb 0%, #06b6d4 100%);
+      --gradient-amber: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+      --gradient-emerald: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
+
+      --radius-sm: 10px;
+      --radius-md: 16px;
+      --radius-lg: 22px;
+      --radius-xl: 28px;
+
+      --shadow-glow: 0 0 32px rgba(124, 58, 237, 0.22);
+      --shadow-card: 0 18px 45px rgba(0, 0, 0, 0.45);
+      --transition-fast: 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+      --transition-smooth: 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    /* ==========================================================================
+       RESET & BASE STYLES
+       ========================================================================== */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      min-height: 100%;
+      background-color: var(--bg-obsidian);
+      color: var(--text-primary);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.55;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Ambient Cyber Grid & Neon Background Orbs */
+    .bg-scene {
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      background:
+        radial-gradient(circle at 12% 18%, rgba(124, 58, 237, 0.22), transparent 42%),
+        radial-gradient(circle at 88% 15%, rgba(6, 182, 212, 0.18), transparent 40%),
+        radial-gradient(circle at 50% 95%, rgba(59, 130, 246, 0.16), transparent 48%),
+        linear-gradient(180deg, #050812 0%, #090f22 50%, #050812 100%);
+    }
+
+    .bg-grid {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      background-image:
+        linear-gradient(rgba(139, 92, 246, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(59, 130, 246, 0.05) 1px, transparent 1px);
+      background-size: 46px 46px;
+      mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 0.9) 20%, transparent 85%);
+      -webkit-mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 0.9) 20%, transparent 85%);
+      pointer-events: none;
+    }
+
+    /* Confetti Canvas */
+    #confetti-canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1000;
+    }
+
+    /* Layout Container */
+    .app-shell {
+      width: 100%;
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 20px 18px 60px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ==========================================================================
+       TOP NAVIGATION BAR
+       ========================================================================== */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 14px 20px;
+      margin-bottom: 26px;
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-card);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .brand-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 13px;
+      background: var(--gradient-primary);
+      display: grid;
+      place-items: center;
+      box-shadow: 0 0 20px rgba(124, 58, 237, 0.45);
+      flex-shrink: 0;
+    }
+
+    .brand-text h1 {
+      font-family: 'Space Grotesk', 'Inter', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      background: linear-gradient(90deg, #ffffff 0%, #c4b5fd 55%, #67e8f9 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      line-height: 1.15;
+    }
+
+    .brand-text span {
+      font-size: 0.72rem;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--neon-cyan);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .icon-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 9px 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-glass);
+      background: rgba(15, 23, 42, 0.65);
+      color: var(--text-primary);
+      font-size: 0.84rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+
+    .icon-btn:hover {
+      border-color: var(--border-bright);
+      background: rgba(30, 41, 82, 0.85);
+      transform: translateY(-1px);
+    }
+
+    .icon-btn.muted {
+      color: var(--text-muted);
+    }
+
+    /* ==========================================================================
+       VIEW MANAGEMENT & ANIMATIONS
+       ========================================================================== */
+    .view {
+      display: none;
+      animation: fadeSlideUp 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    .view.active {
+      display: block;
+    }
+
+    @keyframes fadeSlideUp {
+      from {
+        opacity: 0;
+        transform: translateY(14px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulseSuccess {
+      0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.55); }
+      45% { transform: scale(1.015); box-shadow: 0 0 26px 4px rgba(16, 185, 129, 0.35); }
+      100% { transform: scale(1); box-shadow: 0 0 18px 0 rgba(16, 185, 129, 0.22); }
+    }
+
+    @keyframes shakeError {
+      0%, 100% { transform: translateX(0); }
+      16% { transform: translateX(-8px); }
+      32% { transform: translateX(8px); }
+      48% { transform: translateX(-6px); }
+      64% { transform: translateX(6px); }
+      80% { transform: translateX(-3px); }
+    }
+
+    @keyframes shimmerBar {
+      0% { background-position: 0% 50%; }
+      100% { background-position: 200% 50%; }
+    }
+
+    /* ==========================================================================
+       GLASS CARDS & COMMON COMPONENTS
+       ========================================================================== */
+    .glass-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-card);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      padding: 13px 22px;
+      border-radius: var(--radius-md);
+      border: 1px solid transparent;
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      text-decoration: none;
+      user-select: none;
+      min-height: 48px;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none !important;
+      box-shadow: none !important;
+    }
+
+    .btn-primary {
+      background: var(--gradient-primary);
+      color: #ffffff;
+      box-shadow: 0 8px 24px rgba(99, 102, 241, 0.35);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 30px rgba(99, 102, 241, 0.5);
+    }
+
+    .btn-secondary {
+      background: rgba(30, 41, 78, 0.72);
+      color: var(--text-primary);
+      border-color: var(--border-glass);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: rgba(44, 58, 106, 0.85);
+      border-color: var(--border-bright);
+      transform: translateY(-2px);
+    }
+
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.16);
+      color: #fca5a5;
+      border-color: rgba(239, 68, 68, 0.45);
+    }
+
+    .btn-danger:hover:not(:disabled) {
+      background: rgba(239, 68, 68, 0.28);
+      color: #ffffff;
+      transform: translateY(-1px);
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .pill-purple {
+      background: rgba(139, 92, 246, 0.18);
+      color: #c4b5fd;
+      border: 1px solid rgba(139, 92, 246, 0.38);
+    }
+
+    .pill-cyan {
+      background: rgba(6, 182, 212, 0.16);
+      color: #67e8f9;
+      border: 1px solid rgba(6, 182, 212, 0.38);
+    }
+
+    .pill-amber {
+      background: rgba(245, 158, 11, 0.16);
+      color: #fcd34d;
+      border: 1px solid rgba(245, 158, 11, 0.4);
+    }
+
+    .pill-emerald {
+      background: rgba(16, 185, 129, 0.16);
+      color: #6ee7b7;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+    }
+
+    .pill-red {
+      background: rgba(239, 68, 68, 0.16);
+      color: #fca5a5;
+      border: 1px solid rgba(239, 68, 68, 0.4);
+    }
+
+    /* ==========================================================================
+       HOME DASHBOARD VIEW
+       ========================================================================== */
+    .hero-banner {
+      position: relative;
+      overflow: hidden;
+      padding: 34px 32px;
+      margin-bottom: 24px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      background:
+        radial-gradient(circle at 90% 10%, rgba(139, 92, 246, 0.25), transparent 45%),
+        radial-gradient(circle at 10% 90%, rgba(6, 182, 212, 0.18), transparent 45%),
+        var(--bg-card);
+    }
+
+    .hero-content {
+      max-width: 650px;
+    }
+
+    .hero-content h2 {
+      font-family: 'Space Grotesk', 'Inter', sans-serif;
+      font-size: clamp(1.85rem, 4vw, 2.75rem);
+      font-weight: 700;
+      line-height: 1.12;
+      margin: 12px 0 12px;
+      letter-spacing: -0.025em;
+    }
+
+    .hero-content h2 span {
+      background: var(--gradient-primary);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .hero-content p {
+      color: var(--text-secondary);
+      font-size: 0.98rem;
+      max-width: 580px;
+    }
+
+    .hero-quick-cta {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-width: 220px;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+
+    .stat-card {
+      padding: 18px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      transition: transform var(--transition-fast), border-color var(--transition-fast);
+    }
+
+    .stat-card:hover {
+      transform: translateY(-3px);
+      border-color: var(--border-bright);
+    }
+
+    .stat-label {
+      font-size: 0.76rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .stat-value {
+      font-family: 'Space Grotesk', 'JetBrains Mono', monospace;
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1.1;
+    }
+
+    .stat-sub {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+    }
+
+    /* Mode Selector Grid */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      gap: 12px;
+    }
+
+    .section-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.22rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    .modes-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 18px;
+      margin-bottom: 24px;
+    }
+
+    .mode-card {
+      position: relative;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 18px;
+      overflow: hidden;
+      transition: transform var(--transition-smooth), border-color var(--transition-smooth), box-shadow var(--transition-smooth);
+    }
+
+    .mode-card:hover {
+      transform: translateY(-5px);
+      border-color: var(--border-bright);
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.55), 0 0 28px rgba(124, 58, 237, 0.2);
+    }
+
+    .mode-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--mode-accent, var(--gradient-primary));
+      opacity: 0.9;
+    }
+
+    .mode-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .mode-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      background: var(--mode-accent, var(--gradient-primary));
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+      flex-shrink: 0;
+    }
+
+    .mode-card h3 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.25rem;
+      margin-bottom: 6px;
+    }
+
+    .mode-card p {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    .mode-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .mode-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .dashboard-footer-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 18px 22px;
+    }
+
+    /* ==========================================================================
+       QUIZ ARENA VIEW
+       ========================================================================== */
+    .quiz-container {
+      max-width: 820px;
+      margin: 0 auto;
+    }
+
+    .quiz-hud {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 16px 20px;
+      margin-bottom: 18px;
+    }
+
+    .hud-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .hud-metric {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 13px;
+      border-radius: 11px;
+      background: rgba(15, 23, 42, 0.72);
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.86rem;
+      font-weight: 700;
+    }
+
+    /* Animated Progress Bar */
+    .progress-track {
+      width: 100%;
+      height: 10px;
+      background: rgba(15, 23, 42, 0.85);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 22px;
+      border: 1px solid rgba(139, 92, 246, 0.2);
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #7c3aed, #3b82f6, #06b6d4, #8b5cf6);
+      background-size: 200% 100%;
+      animation: shimmerBar 3s linear infinite;
+      transition: width 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+      box-shadow: 0 0 14px rgba(59, 130, 246, 0.65);
+    }
+
+    /* Question Card */
+    .question-card {
+      padding: 30px 28px;
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    .question-header-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .question-text {
+      font-family: 'Space Grotesk', 'Inter', sans-serif;
+      font-size: clamp(1.18rem, 2.5vw, 1.48rem);
+      font-weight: 700;
+      line-height: 1.4;
+      color: var(--text-primary);
+      margin-bottom: 24px;
+    }
+
+    /* Options List */
+    .options-list {
+      display: flex;
+      flex-direction: column;
+      gap: 13px;
+    }
+
+    .option-btn {
+      width: 100%;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 16px 18px;
+      border-radius: var(--radius-md);
+      border: 1.5px solid rgba(148, 163, 184, 0.18);
+      background: rgba(15, 23, 46, 0.78);
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 0.98rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      position: relative;
+    }
+
+    .option-btn:hover:not(:disabled) {
+      border-color: var(--neon-purple-bright);
+      background: rgba(34, 46, 92, 0.88);
+      transform: translateX(4px);
+      box-shadow: 0 6px 20px rgba(124, 58, 237, 0.18);
+    }
+
+    .option-btn:disabled {
+      cursor: default;
+    }
+
+    .option-letter {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 0.9rem;
+      background: rgba(139, 92, 246, 0.16);
+      border: 1px solid rgba(139, 92, 246, 0.35);
+      color: #c4b5fd;
+      flex-shrink: 0;
+      transition: all var(--transition-fast);
+    }
+
+    .option-text {
+      flex: 1;
+      line-height: 1.45;
+    }
+
+    .option-status-icon {
+      flex-shrink: 0;
+      font-size: 1.15rem;
+      font-weight: 700;
+    }
+
+    /* Exam Selected State (Neutral Neon) */
+    .option-btn.exam-selected {
+      border-color: var(--neon-cyan);
+      background: rgba(6, 182, 212, 0.16);
+      box-shadow: 0 0 22px rgba(6, 182, 212, 0.22);
+    }
+
+    .option-btn.exam-selected .option-letter {
+      background: var(--neon-cyan);
+      border-color: var(--neon-cyan);
+      color: #04131c;
+    }
+
+    /* Correct Answer State */
+    .option-btn.is-correct {
+      border-color: var(--success-border);
+      background: var(--success-bg);
+      color: #ecfdf5;
+      animation: pulseSuccess 0.55s ease forwards;
+    }
+
+    .option-btn.is-correct .option-letter {
+      background: var(--success);
+      border-color: var(--success);
+      color: #022c22;
+    }
+
+    /* Wrong Answer State */
+    .option-btn.is-wrong {
+      border-color: var(--danger-border);
+      background: var(--danger-bg);
+      color: #fef2f2;
+      animation: shakeError 0.48s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+    }
+
+    .option-btn.is-wrong .option-letter {
+      background: var(--danger);
+      border-color: var(--danger);
+      color: #ffffff;
+    }
+
+    .option-btn.dimmed {
+      opacity: 0.52;
+    }
+
+    /* Instant Feedback Banner */
+    .feedback-banner {
+      margin-top: 20px;
+      padding: 15px 18px;
+      border-radius: var(--radius-md);
+      display: none;
+      align-items: flex-start;
+      gap: 12px;
+      font-size: 0.92rem;
+      animation: fadeSlideUp 0.25s ease forwards;
+    }
+
+    .feedback-banner.show {
+      display: flex;
+    }
+
+    .feedback-banner.correct {
+      background: var(--success-bg);
+      border: 1px solid var(--success-border);
+      color: #d1fae5;
+    }
+
+    .feedback-banner.wrong {
+      background: var(--danger-bg);
+      border: 1px solid var(--danger-border);
+      color: #fee2e2;
+    }
+
+    .feedback-banner strong {
+      display: block;
+      margin-bottom: 2px;
+      font-size: 0.96rem;
+    }
+
+    /* Quiz Footer Controls */
+    .quiz-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .shortcut-hint {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* ==========================================================================
+       RESULT DASHBOARD VIEW
+       ========================================================================== */
+    .result-wrapper {
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    .result-hero {
+      padding: 34px 28px;
+      text-align: center;
+      margin-bottom: 22px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .score-ring-wrap {
+      position: relative;
+      width: 196px;
+      height: 196px;
+      margin: 14px auto 20px;
+    }
+
+    .score-ring-svg {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+
+    .score-ring-bg {
+      fill: none;
+      stroke: rgba(148, 163, 184, 0.14);
+      stroke-width: 13;
+    }
+
+    .score-ring-progress {
+      fill: none;
+      stroke: url(#scoreRingGradient);
+      stroke-width: 13;
+      stroke-linecap: round;
+      stroke-dasharray: 534;
+      stroke-dashoffset: 534;
+      transition: stroke-dashoffset 1.25s cubic-bezier(0.22, 1, 0.36, 1);
+      filter: drop-shadow(0 0 10px rgba(99, 102, 241, 0.65));
+    }
+
+    .score-ring-center {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .score-ring-percent {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 2.5rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .score-ring-label {
+      font-size: 0.78rem;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      margin-top: 6px;
+    }
+
+    .result-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .result-stat-box {
+      padding: 18px;
+      text-align: center;
+    }
+
+    .result-stat-box .val {
+      font-family: 'Space Grotesk', monospace;
+      font-size: 1.65rem;
+      font-weight: 700;
+      margin-top: 4px;
+    }
+
+    .result-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 14px;
+    }
+
+    /* ==========================================================================
+       REVIEW ANSWERS VIEW
+       ========================================================================== */
+    .review-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .filter-tabs {
+      display: inline-flex;
+      gap: 6px;
+      background: rgba(15, 23, 42, 0.78);
+      padding: 5px;
+      border-radius: 12px;
+      border: 1px solid var(--border-glass);
+    }
+
+    .filter-tab {
+      padding: 7px 14px;
+      border-radius: 8px;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      font-family: inherit;
+      font-size: 0.84rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+
+    .filter-tab.active {
+      background: var(--gradient-primary);
+      color: #ffffff;
+    }
+
+    .review-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .review-item {
+      padding: 20px 22px;
+      border-left: 4px solid transparent;
+    }
+
+    .review-item.correct {
+      border-left-color: var(--success);
+    }
+
+    .review-item.wrong {
+      border-left-color: var(--danger);
+    }
+
+    .review-q-title {
+      font-weight: 700;
+      font-size: 1.02rem;
+      margin: 8px 0 12px;
+    }
+
+    .review-ans-row {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 0.9rem;
+    }
+
+    .review-ans-line {
+      padding: 8px 12px;
+      border-radius: 9px;
+      background: rgba(15, 23, 42, 0.65);
+    }
+
+    .review-ans-line.user-wrong {
+      background: var(--danger-bg);
+      color: #fecaca;
+    }
+
+    .review-ans-line.correct-ans {
+      background: var(--success-bg);
+      color: #a7f3d0;
+    }
+
+    /* ==========================================================================
+       PROGRESS & ANALYTICS VIEW
+       ========================================================================== */
+    .progress-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 20px;
+      margin-bottom: 22px;
+    }
+
+    .panel {
+      padding: 22px;
+    }
+
+    .panel h3 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.12rem;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 360px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .history-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: rgba(15, 23, 42, 0.72);
+      border: 1px solid rgba(148, 163, 184, 0.14);
+    }
+
+    .weak-item-row {
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: rgba(15, 23, 42, 0.72);
+      border: 1px solid rgba(245, 158, 11, 0.22);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .streak-dots {
+      display: inline-flex;
+      gap: 5px;
+      align-items: center;
+    }
+
+    .streak-dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      background: rgba(148, 163, 184, 0.25);
+      border: 1px solid rgba(148, 163, 184, 0.4);
+    }
+
+    .streak-dot.filled {
+      background: var(--success);
+      border-color: var(--success);
+      box-shadow: 0 0 8px rgba(16, 185, 129, 0.7);
+    }
+
+    .chart-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+      height: 150px;
+      padding: 14px 8px 6px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+      margin-bottom: 10px;
+    }
+
+    .chart-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      height: 100%;
+      gap: 6px;
+    }
+
+    .chart-bar {
+      width: 100%;
+      max-width: 34px;
+      border-radius: 8px 8px 3px 3px;
+      background: var(--gradient-primary);
+      min-height: 6px;
+      transition: height 0.5s ease;
+    }
+
+    .chart-lbl {
+      font-size: 0.7rem;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-muted);
+    }
+
+    /* ==========================================================================
+       CUSTOM MODAL & TOAST (NO ALERT / CONFIRM)
+       ========================================================================== */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(2, 6, 18, 0.78);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      z-index: 900;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+      animation: fadeSlideUp 0.2s ease forwards;
+    }
+
+    .modal-box {
+      width: 100%;
+      max-width: 440px;
+      padding: 26px 24px;
+      background: #0d152c;
+      border: 1px solid var(--border-bright);
+      border-radius: var(--radius-lg);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65);
+    }
+
+    .modal-box h3 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.25rem;
+      margin-bottom: 10px;
+    }
+
+    .modal-box p {
+      color: var(--text-secondary);
+      font-size: 0.94rem;
+      margin-bottom: 22px;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 950;
+      padding: 13px 18px;
+      border-radius: 13px;
+      background: #111b38;
+      border: 1px solid var(--neon-cyan);
+      color: var(--text-primary);
+      font-size: 0.88rem;
+      font-weight: 600;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+      transform: translateY(120px);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+      pointer-events: none;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    /* ==========================================================================
+       RESPONSIVE BREAKPOINTS
+       ========================================================================== */
+    @media (max-width: 960px) {
+      .stats-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+      .progress-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .app-shell {
+        padding: 14px 12px 44px;
+      }
+      .topbar {
+        padding: 12px 14px;
+      }
+      .brand-text span {
+        display: none;
+      }
+      .hero-banner {
+        padding: 24px 20px;
+      }
+      .hero-quick-cta {
+        width: 100%;
+      }
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .modes-grid {
+        grid-template-columns: 1fr;
+      }
+      .result-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .question-card {
+        padding: 22px 18px;
+      }
+      .shortcut-hint {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Ambient Background Layers -->
+  <div class="bg-scene"></div>
+  <div class="bg-grid"></div>
+  <canvas id="confetti-canvas"></canvas>
+
+  <div class="app-shell">
+    <!-- ======================================================================
+         TOP NAVIGATION BAR
+         ====================================================================== -->
+    <header class="topbar">
+      <div class="brand" id="brandHomeBtn" title="Return to Dashboard">
+        <div class="brand-icon" aria-hidden="true">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            <path d="m9 12 2 2 4-4"></path>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>Cyber Quiz Arena</h1>
+          <span>Randomized MCQ Combat Trainer</span>
+        </div>
+      </div>
+
+      <div class="topbar-actions">
+        <button class="icon-btn" id="soundToggleBtn" type="button" title="Toggle Sound Effects">
+          <span id="soundIcon">🔊</span>
+          <span id="soundLabel">SFX On</span>
+        </button>
+        <button class="icon-btn" id="navProgressBtn" type="button">
+          <span>📊</span>
+          <span>Progress</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ======================================================================
+         VIEW 1: HOME DASHBOARD
+         ====================================================================== -->
+    <main id="view-dashboard" class="view active">
+      <!-- Hero Section -->
+      <section class="glass-card hero-banner">
+        <div class="hero-content">
+          <span class="pill pill-cyan">⚡ 100% Dynamic Question &amp; Option Shuffle</span>
+          <h2>Master Cybersecurity MCQs Through <span>Active Recall</span></h2>
+          <p>
+            Every attempt reshuffles all 40 questions and independently randomizes every A/B/C/D option.
+            Train your brain on real concepts—never memorize by option letter or question position.
+          </p>
+        </div>
+        <div class="hero-quick-cta">
+          <button class="btn btn-primary" id="heroStartPracticeBtn" type="button">
+            <span>🚀</span> Start Practice Mode
+          </button>
+          <button class="btn btn-secondary" id="heroQuickBtn" type="button">
+            <span>⚡</span> 10-Question Quick Run
+          </button>
+        </div>
+      </section>
+
+      <!-- Live Statistics Row -->
+      <section class="stats-grid" aria-label="Performance Statistics">
+        <div class="glass-card stat-card">
+          <div class="stat-label">Total Questions <span>📚</span></div>
+          <div class="stat-value" id="statTotalQuestions">40</div>
+          <div class="stat-sub">Complete Syllabus Bank</div>
+        </div>
+        <div class="glass-card stat-card">
+          <div class="stat-label">Total Attempts <span>🎮</span></div>
+          <div class="stat-value" id="statTotalAttempts">0</div>
+          <div class="stat-sub">Completed Sessions</div>
+        </div>
+        <div class="glass-card stat-card">
+          <div class="stat-label">Highest Score <span>🏆</span></div>
+          <div class="stat-value" id="statHighestScore">0 / 40</div>
+          <div class="stat-sub" id="statHighestPct">Best Accuracy: 0%</div>
+        </div>
+        <div class="glass-card stat-card">
+          <div class="stat-label">Average Accuracy <span>🎯</span></div>
+          <div class="stat-value" id="statAvgAccuracy">0%</div>
+          <div class="stat-sub">Across All Modes</div>
+        </div>
+        <div class="glass-card stat-card">
+          <div class="stat-label">Weak Questions <span>🔥</span></div>
+          <div class="stat-value" id="statWeakCount" style="color: #fcd34d;">0</div>
+          <div class="stat-sub">Need 3x Streak to Clear</div>
+        </div>
+      </section>
+
+      <!-- Game Modes Section -->
+      <div class="section-header">
+        <h3 class="section-title">Select Training Mode</h3>
+        <span class="pill pill-purple">Offline Ready • Auto-Saved</span>
+      </div>
+
+      <section class="modes-grid">
+        <!-- Practice Mode -->
+        <article class="glass-card mode-card" style="--mode-accent: var(--gradient-primary);">
+          <div>
+            <div class="mode-top">
+              <div>
+                <h3>Practice Mode</h3>
+                <p>All 40 randomized questions with instant green/red feedback and immediate correct-answer reveal after every choice.</p>
+              </div>
+              <div class="mode-icon">🛡️</div>
+            </div>
+            <div class="mode-meta">
+              <span class="pill pill-purple">40 Questions</span>
+              <span class="pill pill-emerald">Instant Feedback</span>
+              <span class="pill pill-cyan">Unlimited Retries</span>
+            </div>
+          </div>
+          <div class="mode-footer">
+            <button class="btn btn-primary" style="width: 100%;" data-start-mode="practice" type="button">
+              Start Practice
+            </button>
+          </div>
+        </article>
+
+        <!-- Exam Mode -->
+        <article class="glass-card mode-card" style="--mode-accent: var(--gradient-purple);">
+          <div>
+            <div class="mode-top">
+              <div>
+                <h3>Exam Mode</h3>
+                <p>Simulate real test conditions. Complete all 40 randomized questions with zero hints until final submission and full answer review.</p>
+              </div>
+              <div class="mode-icon">📝</div>
+            </div>
+            <div class="mode-meta">
+              <span class="pill pill-purple">40 Questions</span>
+              <span class="pill pill-amber">No Mid-Quiz Hints</span>
+              <span class="pill pill-cyan">Full Post-Review</span>
+            </div>
+          </div>
+          <div class="mode-footer">
+            <button class="btn btn-primary" style="width: 100%; background: var(--gradient-purple);" data-start-mode="exam" type="button">
+              Start Exam
+            </button>
+          </div>
+        </article>
+
+        <!-- Quick Practice -->
+        <article class="glass-card mode-card" style="--mode-accent: var(--gradient-blue);">
+          <div>
+            <div class="mode-top">
+              <div>
+                <h3>Quick Practice</h3>
+                <p>Short on time? Tackle a freshly randomized sprint of 10 questions with shuffled options for rapid-fire daily revision.</p>
+              </div>
+              <div class="mode-icon">⚡</div>
+            </div>
+            <div class="mode-meta">
+              <span class="pill pill-cyan">10 Random Qs</span>
+              <span class="pill pill-emerald">Instant Feedback</span>
+              <span class="pill pill-purple">Fresh Each Run</span>
+            </div>
+          </div>
+          <div class="mode-footer">
+            <button class="btn btn-primary" style="width: 100%; background: var(--gradient-blue);" data-start-mode="quick" type="button">
+              Quick Practice
+            </button>
+          </div>
+        </article>
+
+        <!-- Weak Questions Mode -->
+        <article class="glass-card mode-card" style="--mode-accent: var(--gradient-amber);">
+          <div>
+            <div class="mode-top">
+              <div>
+                <h3>Weak Questions Mode</h3>
+                <p>Automatically targets every question you missed. Answer a weak question correctly 3 consecutive times in this mode to master and remove it.</p>
+              </div>
+              <div class="mode-icon">🎯</div>
+            </div>
+            <div class="mode-meta">
+              <span class="pill pill-amber" id="weakModeCountPill">0 Queued</span>
+              <span class="pill pill-emerald">3x Streak Mastery</span>
+            </div>
+          </div>
+          <div class="mode-footer">
+            <button class="btn btn-primary" style="width: 100%; background: var(--gradient-amber);" data-start-mode="weak" type="button">
+              Weak Questions
+            </button>
+          </div>
+        </article>
+      </section>
+
+      <!-- Bottom Progress Bar -->
+      <section class="glass-card dashboard-footer-bar">
+        <div>
+          <strong style="font-size: 1rem;">Track Your Mastery Curve</strong>
+          <p style="font-size: 0.86rem; color: var(--text-secondary);">
+            Inspect past scores, accuracy trends, and weak question streaks saved locally on your device.
+          </p>
+        </div>
+        <button class="btn btn-secondary" id="dashViewProgressBtn" type="button">
+          📊 View Progress
+        </button>
+      </section>
+    </main>
+
+    <!-- ======================================================================
+         VIEW 2: ACTIVE QUIZ ARENA
+         ====================================================================== -->
+    <section id="view-quiz" class="view">
+      <div class="quiz-container">
+        <!-- Top HUD -->
+        <div class="glass-card quiz-hud">
+          <div class="hud-group">
+            <button class="icon-btn" id="quitQuizBtn" type="button">← Exit</button>
+            <span class="pill pill-purple" id="quizModeBadge">Practice Mode</span>
+          </div>
+          <div class="hud-group">
+            <div class="hud-metric" title="Current Question">
+              <span>📋</span>
+              <span id="hudProgressText">1 / 40</span>
+            </div>
+            <div class="hud-metric" id="hudScoreBox" title="Live Score">
+              <span>⭐</span>
+              <span id="hudScoreText">0 pts</span>
+            </div>
+            <div class="hud-metric" title="Elapsed Time">
+              <span>⏱️</span>
+              <span id="hudTimerText">00:00</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Animated Progress Bar -->
+        <div class="progress-track" aria-label="Quiz Progress">
+          <div class="progress-fill" id="quizProgressBar"></div>
+        </div>
+
+        <!-- Question Card -->
+        <div class="glass-card question-card">
+          <div class="question-header-row">
+            <span class="pill pill-cyan" id="questionCounterPill">Question 1 of 40</span>
+            <span class="pill pill-amber" id="weakStreakPill" style="display: none;">Mastery Streak: 0 / 3</span>
+          </div>
+
+          <h2 class="question-text" id="questionText">Loading question...</h2>
+
+          <!-- Randomized A/B/C/D Options -->
+          <div class="options-list" id="optionsContainer"></div>
+
+          <!-- Instant Feedback Banner (Practice / Quick / Weak) -->
+          <div class="feedback-banner" id="feedbackBanner" role="status" aria-live="polite">
+            <span id="feedbackIcon" style="font-size: 1.35rem;"></span>
+            <div>
+              <strong id="feedbackTitle"></strong>
+              <span id="feedbackDetail"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quiz Footer Controls -->
+        <div class="quiz-controls">
+          <span class="shortcut-hint">Keys: [A-D] or [1-4] to answer • [Enter] for Next</span>
+          <button class="btn btn-primary" id="nextQuestionBtn" type="button" disabled>
+            Next Question →
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         VIEW 3: RESULT DASHBOARD
+         ====================================================================== -->
+    <section id="view-result" class="view">
+      <div class="result-wrapper">
+        <div class="glass-card result-hero">
+          <span class="pill pill-cyan" id="resultModePill">Practice Mode Complete</span>
+          <h2 id="resultHeadline" style="font-family: 'Space Grotesk', sans-serif; font-size: 2rem; margin-top: 10px;">
+            Mission Accomplished!
+          </h2>
+          <p id="resultSubtext" style="color: var(--text-secondary); margin-top: 4px;"></p>
+
+          <!-- Animated Circular Score Indicator -->
+          <div class="score-ring-wrap">
+            <svg class="score-ring-svg" viewBox="0 0 190 190">
+              <defs>
+                <linearGradient id="scoreRingGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#8b5cf6" />
+                  <stop offset="55%" stop-color="#3b82f6" />
+                  <stop offset="100%" stop-color="#06b6d4" />
+                </linearGradient>
+              </defs>
+              <circle class="score-ring-bg" cx="95" cy="95" r="85"></circle>
+              <circle class="score-ring-progress" id="scoreRingCircle" cx="95" cy="95" r="85"></circle>
+            </svg>
+            <div class="score-ring-center">
+              <div class="score-ring-percent" id="resultAccuracyBig">0%</div>
+              <div class="score-ring-label">Accuracy</div>
+            </div>
+          </div>
+
+          <div id="newRecordBadge" style="display: none; margin-bottom: 12px;">
+            <span class="pill pill-emerald">🏆 New Personal Best Score!</span>
+          </div>
+        </div>
+
+        <!-- Result Metrics Grid -->
+        <div class="result-stats-grid">
+          <div class="glass-card result-stat-box">
+            <div class="stat-label" style="justify-content: center;">Total Score</div>
+            <div class="val" id="resTotalScore">0 / 40</div>
+          </div>
+          <div class="glass-card result-stat-box">
+            <div class="stat-label" style="justify-content: center;">Correct Answers</div>
+            <div class="val" id="resCorrect" style="color: var(--success);">0</div>
+          </div>
+          <div class="glass-card result-stat-box">
+            <div class="stat-label" style="justify-content: center;">Incorrect Answers</div>
+            <div class="val" id="resIncorrect" style="color: var(--danger);">0</div>
+          </div>
+          <div class="glass-card result-stat-box">
+            <div class="stat-label" style="justify-content: center;">Accuracy %</div>
+            <div class="val" id="resAccuracy">0%</div>
+          </div>
+          <div class="glass-card result-stat-box">
+            <div class="stat-label" style="justify-content: center;">Total Time Taken</div>
+            <div class="val" id="resTimeTaken">00:00</div>
+          </div>
+          <div class="glass-card result-stat-box">
+            <div class="stat-label" style="justify-content: center;">Highest Score</div>
+            <div class="val" id="resHighestScore" style="color: #c4b5fd;">0 / 40</div>
+          </div>
+        </div>
+
+        <!-- Result Actions -->
+        <div class="result-actions">
+          <button class="btn btn-primary" id="retryQuizBtn" type="button">🔄 Retry Quiz</button>
+          <button class="btn btn-secondary" id="reviewAnswersBtn" type="button">🔍 Review Answers</button>
+          <button class="btn btn-secondary" id="resultBackDashBtn" type="button">🏠 Back to Dashboard</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         VIEW 4: REVIEW ANSWERS
+         ====================================================================== -->
+    <section id="view-review" class="view">
+      <div class="review-header">
+        <div>
+          <h2 style="font-family: 'Space Grotesk', sans-serif; font-size: 1.55rem;">Answer Review</h2>
+          <p style="color: var(--text-secondary); font-size: 0.9rem;">Compare your selections against the verified correct answers.</p>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+          <div class="filter-tabs" id="reviewFilterTabs">
+            <button class="filter-tab active" data-filter="all" type="button">All</button>
+            <button class="filter-tab" data-filter="wrong" type="button">Incorrect</button>
+            <button class="filter-tab" data-filter="correct" type="button">Correct</button>
+          </div>
+          <button class="btn btn-secondary" id="reviewBackResultBtn" type="button">← Results</button>
+          <button class="btn btn-primary" id="reviewBackDashBtn" type="button">Dashboard</button>
+        </div>
+      </div>
+
+      <div class="review-list" id="reviewListContainer"></div>
+    </section>
+
+    <!-- ======================================================================
+         VIEW 5: PROGRESS & ANALYTICS
+         ====================================================================== -->
+    <section id="view-progress" class="view">
+      <div class="review-header">
+        <div>
+          <h2 style="font-family: 'Space Grotesk', sans-serif; font-size: 1.6rem;">Progress &amp; Mastery Analytics</h2>
+          <p style="color: var(--text-secondary); font-size: 0.9rem;">Saved automatically in your browser's LocalStorage for offline continuity.</p>
+        </div>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+          <button class="btn btn-danger" id="resetProgressBtn" type="button">🗑️ Reset Progress</button>
+          <button class="btn btn-primary" id="progressBackDashBtn" type="button">← Back to Dashboard</button>
+        </div>
+      </div>
+
+      <!-- Recent Accuracy Chart -->
+      <div class="glass-card panel" style="margin-bottom: 20px;">
+        <h3>
+          <span>Recent Accuracy Trend (Last 10 Attempts)</span>
+          <span class="pill pill-cyan" id="progLifetimeAnswered">0 Total Answers</span>
+        </h3>
+        <div class="chart-bars" id="accuracyChartBars"></div>
+        <div style="font-size: 0.8rem; color: var(--text-muted);" id="chartCaption">Complete quizzes to visualize your accuracy growth.</div>
+      </div>
+
+      <div class="progress-grid">
+        <!-- Attempt History -->
+        <div class="glass-card panel">
+          <h3>
+            <span>Recent Attempt History</span>
+            <span class="pill pill-purple" id="progAttemptsPill">0 Runs</span>
+          </h3>
+          <div class="history-list" id="attemptHistoryList"></div>
+        </div>
+
+        <!-- Weak Questions Tracker -->
+        <div class="glass-card panel">
+          <h3>
+            <span>Weak Questions Queue</span>
+            <span class="pill pill-amber" id="progWeakPill">0 Weak</span>
+          </h3>
+          <p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 12px;">
+            Answer a weak question correctly 3 consecutive times in Weak Questions Mode to clear it.
+          </p>
+          <div class="history-list" id="weakQuestionsList"></div>
+          <div style="margin-top: 14px;">
+            <button class="btn btn-primary" id="progPracticeWeakBtn" style="width: 100%; background: var(--gradient-amber);" type="button">
+              🎯 Practice Weak Questions Now
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Custom Modal Dialog (Replaces alert/confirm) -->
+  <div class="modal-backdrop" id="customModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-box">
+      <h3 id="modalTitle">Notice</h3>
+      <p id="modalMessage"></p>
+      <div class="modal-actions" id="modalActions"></div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toastEl" role="status" aria-live="polite"></div>
+
+  <script>
+    /* ==========================================================================
+       1. COMPLETE 40-QUESTION CYBERSECURITY QUESTION BANK
+       Every question stores its exact permanent correctAnswer text.
+       During initialization, each option gets a unique immutable option ID
+       and correctOptionId is bound directly to the matching option ID.
+       ========================================================================== */
+    const RAW_QUESTION_BANK = [
+      {
+        id: 1,
+        question: "Which security service protects information from unauthorized disclosure?",
+        options: ["Confidentiality", "Integrity", "Authentication", "Non-repudiation"],
+        correctAnswer: "Confidentiality"
+      },
+      {
+        id: 2,
+        question: "Which service ensures that data has not been altered improperly?",
+        options: ["Integrity", "Confidentiality", "Authentication", "Non-repudiation"],
+        correctAnswer: "Integrity"
+      },
+      {
+        id: 3,
+        question: "Which method is explicitly listed for entity authentication?",
+        options: ["Fixed password and OTP", "Confidentiality", "Integrity", "Authentication"],
+        correctAnswer: "Fixed password and OTP"
+      },
+      {
+        id: 4,
+        question: "Cybersecurity is described in the syllabus as an extended version of which area?",
+        options: ["Network security", "Confidentiality", "Integrity", "Authentication"],
+        correctAnswer: "Network security"
+      },
+      {
+        id: 5,
+        question: "Which of the following is a type of cybersecurity listed in the syllabus?",
+        options: ["Cloud security", "Confidentiality", "Integrity", "Authentication"],
+        correctAnswer: "Cloud security"
+      },
+      {
+        id: 6,
+        question: "Which of the following is identified as a possible weakness in cybersecurity?",
+        options: ["Vulnerability", "Confidentiality", "Integrity", "Authentication"],
+        correctAnswer: "Vulnerability"
+      },
+      {
+        id: 7,
+        question: "Which combination best represents the relationship among threats, attacks and vulnerabilities?",
+        options: [
+          "A vulnerability is always harmless",
+          "Vulnerabilities can be exploited by attacks arising from threats",
+          "Threats and attacks are identical",
+          "Attacks exist without vulnerabilities"
+        ],
+        correctAnswer: "Vulnerabilities can be exploited by attacks arising from threats"
+      },
+      {
+        id: 8,
+        question: "What is a program designed to harm or compromise a computer system generally called?",
+        options: ["Malware", "Spyware", "Ransomware", "Eavesdropping"],
+        correctAnswer: "Malware"
+      },
+      {
+        id: 9,
+        question: "Which malicious program is specifically associated with encrypting data for extortion?",
+        options: ["Ransomware", "Malware", "Spyware", "Eavesdropping"],
+        correctAnswer: "Ransomware"
+      },
+      {
+        id: 10,
+        question: "What term refers to secretly listening to communications or information?",
+        options: ["Eavesdropping", "Malware", "Spyware", "Ransomware"],
+        correctAnswer: "Eavesdropping"
+      },
+      {
+        id: 11,
+        question: "What is a weakness caused by technology, configuration or security-policy issues called?",
+        options: ["Vulnerability", "Malware", "Spyware", "Ransomware"],
+        correctAnswer: "Vulnerability"
+      },
+      {
+        id: 12,
+        question: "Which term describes a sustained, targeted threat activity identified in the syllabus?",
+        options: ["Advanced persistent threat", "Malware", "Spyware", "Ransomware"],
+        correctAnswer: "Advanced persistent threat"
+      },
+      {
+        id: 13,
+        question: "Which malicious program can replicate itself by infecting other files or systems?",
+        options: ["Virus", "Malware", "Spyware", "Ransomware"],
+        correctAnswer: "Virus"
+      },
+      {
+        id: 14,
+        question: "Which pairing correctly matches a cybersecurity term with its meaning?",
+        options: [
+          "Malware – a program designed to harm or compromise a computer system",
+          "Ransomware – secretly listening to communications",
+          "Spyware – encrypting data for extortion",
+          "Eavesdropping – a program that replicates by infecting files"
+        ],
+        correctAnswer: "Malware – a program designed to harm or compromise a computer system"
+      },
+      {
+        id: 15,
+        question: "A person who performs hacking activities with authorization for security purposes is commonly termed what?",
+        options: ["Ethical hacker", "Cracker", "Forensics investigator", "Cybernaut"],
+        correctAnswer: "Ethical hacker"
+      },
+      {
+        id: 16,
+        question: "What is the main purpose of distinguishing threats, attacks and vulnerabilities?",
+        options: [
+          "To understand different stages and aspects of security risk",
+          "Ethical hacker",
+          "Cracker",
+          "Forensics investigator"
+        ],
+        correctAnswer: "To understand different stages and aspects of security risk"
+      },
+      {
+        id: 17,
+        question: "Which topic is explicitly included under ethical hacking and social engineering?",
+        options: ["Information assurance", "Ethical hacker", "Cracker", "Forensics investigator"],
+        correctAnswer: "Information assurance"
+      },
+      {
+        id: 18,
+        question: "Hackers and crackers are listed as concepts under which syllabus unit?",
+        options: ["Ethical Hacking", "Ethical hacker", "Cracker", "Forensics investigator"],
+        correctAnswer: "Ethical Hacking"
+      },
+      {
+        id: 19,
+        question: "Which of the following is included in the scope of ethical hacking?",
+        options: ["Threats and attack vectors", "Ethical hacker", "Cracker", "Forensics investigator"],
+        correctAnswer: "Threats and attack vectors"
+      },
+      {
+        id: 20,
+        question: "Which statement best distinguishes an attack from a vulnerability?",
+        options: [
+          "An attack is an attempt to exploit a weakness, while a vulnerability is the weakness itself",
+          "Ethical hacker",
+          "Cracker",
+          "Forensics investigator"
+        ],
+        correctAnswer: "An attack is an attempt to exploit a weakness, while a vulnerability is the weakness itself"
+      },
+      {
+        id: 21,
+        question: "Which sequence best supports an ethical-hacking assessment?",
+        options: [
+          "Identify threats/attack vectors, assess vulnerabilities, and act within an authorized scope",
+          "Ethical hacker",
+          "Cracker",
+          "Forensics investigator"
+        ],
+        correctAnswer: "Identify threats/attack vectors, assess vulnerabilities, and act within an authorized scope"
+      },
+      {
+        id: 22,
+        question: "What is evidence collected from digital devices for an investigation called?",
+        options: ["Digital evidence", "Cyber forensics", "Physical security", "Video surveillance"],
+        correctAnswer: "Digital evidence"
+      },
+      {
+        id: 23,
+        question: "What field deals with investigation of cyber incidents using forensic methods?",
+        options: ["Cyber forensics", "Digital evidence", "Physical security", "Video surveillance"],
+        correctAnswer: "Cyber forensics"
+      },
+      {
+        id: 24,
+        question: "Which role is specifically mentioned in the syllabus?",
+        options: ["Forensics investigator", "Digital evidence", "Cyber forensics", "Physical security"],
+        correctAnswer: "Forensics investigator"
+      },
+      {
+        id: 25,
+        question: "What is the process of examining digital material to support an investigation called?",
+        options: ["Forensics investigation", "Digital evidence", "Cyber forensics", "Physical security"],
+        correctAnswer: "Forensics investigation"
+      },
+      {
+        id: 26,
+        question: "Which topic is part of the cyber-crime unit?",
+        options: ["Cybercrime methodologies and types", "Digital evidence", "Cyber forensics", "Physical security"],
+        correctAnswer: "Cybercrime methodologies and types"
+      },
+      {
+        id: 27,
+        question: "Which item is directly relevant to preserving and examining digital evidence?",
+        options: ["Storage media", "Digital evidence", "Cyber forensics", "Physical security"],
+        correctAnswer: "Storage media"
+      },
+      {
+        id: 28,
+        question: "Which approach best fits the syllabus description of cybercrime investigation?",
+        options: [
+          "Use an investigation process involving digital evidence, forensic roles and forensic tools",
+          "Digital evidence",
+          "Cyber forensics",
+          "Physical security"
+        ],
+        correctAnswer: "Use an investigation process involving digital evidence, forensic roles and forensic tools"
+      },
+      {
+        id: 29,
+        question: "What type of security protects organizational facilities and physical assets?",
+        options: ["Physical security", "Access control", "Biometrics", "Video surveillance"],
+        correctAnswer: "Physical security"
+      },
+      {
+        id: 30,
+        question: "Which system is used to control and monitor entry to protected areas?",
+        options: ["Access control and monitoring system", "Physical security", "Access control", "Biometrics"],
+        correctAnswer: "Access control and monitoring system"
+      },
+      {
+        id: 31,
+        question: "Which technology is listed as an organizational physical-security measure?",
+        options: ["Biometrics", "Physical security", "Access control", "Video surveillance"],
+        correctAnswer: "Biometrics"
+      },
+      {
+        id: 32,
+        question: "Which of the following is specifically mentioned with biometrics?",
+        options: ["Smart card", "Physical security", "Access control", "Biometrics"],
+        correctAnswer: "Smart card"
+      },
+      {
+        id: 33,
+        question: "What facility is specifically discussed in relation to safety and security?",
+        options: ["Data centre", "Physical security", "Access control", "Biometrics"],
+        correctAnswer: "Data centre"
+      },
+      {
+        id: 34,
+        question: "Which combination most directly addresses organizational physical protection?",
+        options: [
+          "Access control, biometrics, smart cards and video surveillance",
+          "Physical security",
+          "Access control",
+          "Biometrics"
+        ],
+        correctAnswer: "Access control, biometrics, smart cards and video surveillance"
+      },
+      {
+        id: 35,
+        question: "Which operating system is named as a cybersecurity tool in the syllabus?",
+        options: ["Kali Linux", "Smart card", "Data centre", "OTP"],
+        correctAnswer: "Kali Linux"
+      },
+      {
+        id: 36,
+        question: "Which category of tool is listed as attack related?",
+        options: ["Attack-related tool", "Kali Linux", "Smart card", "Data centre"],
+        correctAnswer: "Attack-related tool"
+      },
+      {
+        id: 37,
+        question: "Which category is specifically associated with managing passwords?",
+        options: ["Password management tool/website", "Kali Linux", "Smart card", "Data centre"],
+        correctAnswer: "Password management tool/website"
+      },
+      {
+        id: 38,
+        question: "Which tool is explicitly named under open-source cybersecurity tools?",
+        options: ["Kali Linux", "Smart card", "OTP", "Video surveillance"],
+        correctAnswer: "Kali Linux"
+      },
+      {
+        id: 39,
+        question: "Which option correctly groups the three tool-related topics in Unit 6?",
+        options: ["Attack-related tools", "Password management tools/websites", "Kali Linux", "All of these"],
+        correctAnswer: "All of these"
+      },
+      {
+        id: 40,
+        question: "Which selection most directly matches the syllabus focus of Unit 6?",
+        options: [
+          "Attack-related tools only",
+          "Password management tools only",
+          "Open-source cybersecurity tools including attack-related tools, password management tools/websites and Kali Linux",
+          "Physical security tools only"
+        ],
+        correctAnswer: "Open-source cybersecurity tools including attack-related tools, password management tools/websites and Kali Linux"
+      }
+    ];
+
+    /**
+     * Normalize question bank into structured objects where EVERY option has
+     * a unique immutable ID (`q{id}_opt{idx}`) and `correctOptionId` is
+     * strictly bound to the option matching `correctAnswer`.
+     */
+    const QUESTION_BANK = RAW_QUESTION_BANK.map((item) => {
+      const optionObjects = item.options.map((text, idx) => ({
+        id: `q${item.id}_opt${idx + 1}`,
+        text: text
+      }));
+      const match = optionObjects.find((opt) => opt.text === item.correctAnswer);
+      if (!match) {
+        throw new Error(`Integrity Error on Question ${item.id}: correctAnswer does not match any option.`);
+      }
+      return {
+        id: item.id,
+        question: item.question,
+        options: optionObjects,
+        correctAnswer: item.correctAnswer,
+        correctOptionId: match.id
+      };
+    });
+
+    /* ==========================================================================
+       2. LOCAL STORAGE ENGINE (WITH SAFE IN-MEMORY FALLBACK)
+       ========================================================================== */
+    const STORAGE_KEY = "cyber_quiz_arena_state_v1";
+
+    function createDefaultProgress() {
+      return {
+        totalAttempts: 0,
+        highestScore: 0,
+        highestScoreOutOf: 40,
+        highestPercentage: 0,
+        previousScores: [],       // Array of { mode, score, total, accuracy, timeSeconds, date }
+        correctHistory: {},       // { [questionId]: count }
+        incorrectHistory: {},     // { [questionId]: count }
+        weakQuestions: {},        // { [questionId]: { streak: 0, wrongCount: 1, lastMissed: ts } }
+        lastOptionOrders: {},     // { [questionId]: "q1_opt3|q1_opt1|..." } to prevent repeat layouts
+        lastQuestionOrderSig: "", // Prevents repeating identical question sequences
+        soundEnabled: true,
+        practiceProgress: {
+          totalAnswered: 0,
+          totalCorrect: 0,
+          totalIncorrect: 0
+        }
+      };
+    }
+
+    let progressData = loadProgress();
+
+    function loadProgress() {
+      try {
+        const raw = window.localStorage.getItem(STORAGE_KEY);
+        if (!raw) return createDefaultProgress();
+        const parsed = JSON.parse(raw);
+        return {
+          ...createDefaultProgress(),
+          ...parsed,
+          practiceProgress: {
+            ...createDefaultProgress().practiceProgress,
+            ...(parsed.practiceProgress || {})
+          }
+        };
+      } catch (err) {
+        return createDefaultProgress();
+      }
+    }
+
+    function saveProgress() {
+      try {
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(progressData));
+      } catch (err) {
+        // Fallback silently in restricted sandbox environments
+      }
+    }
+
+    /* ==========================================================================
+       3. WEB AUDIO SYNTHESIZER (OFFLINE SOUND EFFECTS)
+       ========================================================================== */
+    const SoundFX = (() => {
+      let ctx = null;
+      function getCtx() {
+        if (!progressData.soundEnabled) return null;
+        if (!ctx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (AudioCtx) ctx = new AudioCtx();
+        }
+        if (ctx && ctx.state === "suspended") ctx.resume().catch(() => {});
+        return ctx;
+      }
+
+      function playTone(freq, duration, type = "sine", gainVal = 0.08, delay = 0) {
+        const audio = getCtx();
+        if (!audio) return;
+        const now = audio.currentTime + delay;
+        const osc = audio.createOscillator();
+        const gain = audio.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, now);
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.exponentialRampToValueAtTime(gainVal, now + 0.015);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+        osc.connect(gain);
+        gain.connect(audio.destination);
+        osc.start(now);
+        osc.stop(now + duration + 0.02);
+      }
+
+      return {
+        correct() {
+          playTone(587.33, 0.14, "triangle", 0.09, 0);
+          playTone(880, 0.22, "triangle", 0.09, 0.09);
+        },
+        wrong() {
+          playTone(220, 0.16, "sawtooth", 0.06, 0);
+          playTone(165, 0.24, "sawtooth", 0.06, 0.11);
+        },
+        click() {
+          playTone(520, 0.06, "sine", 0.04, 0);
+        },
+        victory() {
+          [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => {
+            playTone(f, 0.28, "triangle", 0.09, i * 0.1);
+          });
+        }
+      };
+    })();
+
+    /* ==========================================================================
+       4. TRUE RANDOMIZATION ENGINE (FISHER-YATES + ANTI-REPEAT)
+       ========================================================================== */
+    function fisherYatesShuffle(arr) {
+      const copy = [...arr];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    /**
+     * Shuffles a question's 4 option objects independently while keeping each
+     * option's `id` and `text` permanently paired. Avoids repeating the exact
+     * previous option arrangement for that question when possible.
+     */
+    function shuffleOptionsForQuestion(questionObj) {
+      const prevSig = progressData.lastOptionOrders[questionObj.id] || "";
+      let shuffled = fisherYatesShuffle(questionObj.options);
+      let attempts = 0;
+
+      while (shuffled.map((o) => o.id).join("|") === prevSig && attempts < 6) {
+        shuffled = fisherYatesShuffle(questionObj.options);
+        attempts++;
+      }
+
+      progressData.lastOptionOrders[questionObj.id] = shuffled.map((o) => o.id).join("|");
+      return shuffled;
+    }
+
+    /**
+     * Builds a fresh randomized session array of questions, each with freshly
+     * shuffled option objects. Never repeats a question within an attempt.
+     */
+    function buildRandomizedSessionQuestions(sourceQuestions, count = null) {
+      let pool = fisherYatesShuffle(sourceQuestions);
+      if (pool.length > 1) {
+        let tries = 0;
+        while (pool.map((q) => q.id).join(",") === progressData.lastQuestionOrderSig && tries < 5) {
+          pool = fisherYatesShuffle(sourceQuestions);
+          tries++;
+        }
+      }
+
+      const selected = count ? pool.slice(0, Math.min(count, pool.length)) : pool;
+      progressData.lastQuestionOrderSig = selected.map((q) => q.id).join(",");
+
+      const prepared = selected.map((q) => ({
+        ...q,
+        shuffledOptions: shuffleOptionsForQuestion(q)
+      }));
+
+      saveProgress();
+      return prepared;
+    }
+
+    /* ==========================================================================
+       5. APPLICATION STATE & QUIZ SESSION CONTROLLER
+       ========================================================================== */
+    const MODE_META = {
+      practice: { label: "Practice Mode", instantFeedback: true },
+      exam: { label: "Exam Mode", instantFeedback: false },
+      quick: { label: "Quick Practice (10 Qs)", instantFeedback: true },
+      weak: { label: "Weak Questions Mode", instantFeedback: true }
+    };
+
+    const LETTERS = ["A", "B", "C", "D"];
+
+    let session = {
+      active: false,
+      mode: "practice",
+      questions: [],
+      currentIndex: 0,
+      score: 0,
+      answers: [],          // { questionObj, selectedOptionId, selectedText, selectedLetter, correctLetter, isCorrect }
+      lockedCurrent: false, // Prevents changing answer after submission in instant feedback modes
+      examTempSelection: null,
+      startTime: 0,
+      elapsedSeconds: 0,
+      timerInterval: null
+    };
+
+    let lastResultSnapshot = null;
+
+    /* ==========================================================================
+       6. UI HELPERS: VIEWS, MODAL, TOAST, CONFETTI
+       ========================================================================== */
+    function switchView(viewId) {
+      document.querySelectorAll(".view").forEach((el) => el.classList.remove("active"));
+      const target = document.getElementById(viewId);
+      if (target) target.classList.add("active");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    let toastTimeout = null;
+    function showToast(msg) {
+      const el = document.getElementById("toastEl");
+      el.textContent = msg;
+      el.classList.add("show");
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => el.classList.remove("show"), 2600);
+    }
+
+    function openModal({ title, message, buttons }) {
+      const backdrop = document.getElementById("customModal");
+      document.getElementById("modalTitle").textContent = title;
+      document.getElementById("modalMessage").textContent = message;
+      const actions = document.getElementById("modalActions");
+      actions.innerHTML = "";
+
+      buttons.forEach((btnCfg) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = `btn ${btnCfg.className || "btn-secondary"}`;
+        b.textContent = btnCfg.label;
+        b.addEventListener("click", () => {
+          closeModal();
+          if (btnCfg.onClick) btnCfg.onClick();
+        });
+        actions.appendChild(b);
+      });
+
+      backdrop.classList.add("open");
+    }
+
+    function closeModal() {
+      document.getElementById("customModal").classList.remove("open");
+    }
+
+    function formatTime(totalSeconds) {
+      const mins = Math.floor(totalSeconds / 60);
+      const secs = totalSeconds % 60;
+      return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+    }
+
+    /* Confetti Engine for Perfect 100% Score */
+    function launchConfetti() {
+      const canvas = document.getElementById("confetti-canvas");
+      const ctx = canvas.getContext("2d");
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      const colors = ["#8b5cf6", "#3b82f6", "#06b6d4", "#10b981", "#ec4899", "#f59e0b"];
+      const particles = Array.from({ length: 150 }, () => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * -canvas.height * 0.6,
+        w: 6 + Math.random() * 7,
+        h: 10 + Math.random() * 8,
+        vx: (Math.random() - 0.5) * 4.2,
+        vy: 2.5 + Math.random() * 4.5,
+        rot: Math.random() * 360,
+        vRot: (Math.random() - 0.5) * 10,
+        color: colors[Math.floor(Math.random() * colors.length)]
+      }));
+
+      let frames = 0;
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach((p) => {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.rot += p.vRot;
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate((p.rot * Math.PI) / 180);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+          ctx.restore();
+        });
+        frames++;
+        if (frames < 210) {
+          requestAnimationFrame(draw);
+        } else {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+      }
+      requestAnimationFrame(draw);
+    }
+
+    /* ==========================================================================
+       7. DASHBOARD RENDERING
+       ========================================================================== */
+    function renderDashboard() {
+      const weakIds = Object.keys(progressData.weakQuestions);
+      const totalAttempts = progressData.totalAttempts;
+
+      // Calculate average accuracy across all completed sessions
+      let avgAcc = 0;
+      if (progressData.previousScores.length > 0) {
+        const sumAcc = progressData.previousScores.reduce((acc, s) => acc + s.accuracy, 0);
+        avgAcc = Math.round(sumAcc / progressData.previousScores.length);
+      }
+
+      document.getElementById("statTotalQuestions").textContent = QUESTION_BANK.length;
+      document.getElementById("statTotalAttempts").textContent = totalAttempts;
+      document.getElementById("statHighestScore").textContent =
+        `${progressData.highestScore} / ${progressData.highestScoreOutOf || 40}`;
+      document.getElementById("statHighestPct").textContent =
+        `Best Accuracy: ${progressData.highestPercentage}%`;
+      document.getElementById("statAvgAccuracy").textContent = `${avgAcc}%`;
+      document.getElementById("statWeakCount").textContent = weakIds.length;
+      document.getElementById("weakModeCountPill").textContent = `${weakIds.length} Queued`;
+
+      updateSoundButtonUI();
+    }
+
+    function updateSoundButtonUI() {
+      const btn = document.getElementById("soundToggleBtn");
+      document.getElementById("soundIcon").textContent = progressData.soundEnabled ? "🔊" : "🔇";
+      document.getElementById("soundLabel").textContent = progressData.soundEnabled ? "SFX On" : "Muted";
+      btn.classList.toggle("muted", !progressData.soundEnabled);
+    }
+
+    /* ==========================================================================
+       8. START & RUN QUIZ SESSION
+       ========================================================================== */
+    function startQuiz(mode) {
+      SoundFX.click();
+
+      let sourcePool = QUESTION_BANK;
+      let limit = null;
+
+      if (mode === "quick") {
+        limit = 10;
+      } else if (mode === "weak") {
+        const weakIds = Object.keys(progressData.weakQuestions).map(Number);
+        if (weakIds.length === 0) {
+          openModal({
+            title: "No Weak Questions Yet! 🎉",
+            message:
+              "You currently have 0 weak questions queued. Any question you answer incorrectly in Practice, Exam, or Quick Practice is automatically added here for targeted mastery.",
+            buttons: [
+              { label: "Close", className: "btn-secondary" },
+              {
+                label: "Start Quick Practice",
+                className: "btn-primary",
+                onClick: () => startQuiz("quick")
+              }
+            ]
+          });
+          return;
+        }
+        sourcePool = QUESTION_BANK.filter((q) => weakIds.includes(q.id));
+      }
+
+      const preparedQuestions = buildRandomizedSessionQuestions(sourcePool, limit);
+
+      stopTimer();
+      session = {
+        active: true,
+        mode,
+        questions: preparedQuestions,
+        currentIndex: 0,
+        score: 0,
+        answers: [],
+        lockedCurrent: false,
+        examTempSelection: null,
+        startTime: Date.now(),
+        elapsedSeconds: 0,
+        timerInterval: null
+      };
+
+      // Configure HUD for mode
+      document.getElementById("quizModeBadge").textContent = MODE_META[mode].label;
+      document.getElementById("hudScoreBox").style.display =
+        MODE_META[mode].instantFeedback ? "flex" : "none";
+
+      startTimer();
+      switchView("view-quiz");
+      renderCurrentQuestion();
+    }
+
+    function startTimer() {
+      document.getElementById("hudTimerText").textContent = "00:00";
+      session.timerInterval = setInterval(() => {
+        session.elapsedSeconds = Math.floor((Date.now() - session.startTime) / 1000);
+        document.getElementById("hudTimerText").textContent = formatTime(session.elapsedSeconds);
+      }, 500);
+    }
+
+    function stopTimer() {
+      if (session.timerInterval) {
+        clearInterval(session.timerInterval);
+        session.timerInterval = null;
+      }
+    }
+
+    function renderCurrentQuestion() {
+      const q = session.questions[session.currentIndex];
+      const total = session.questions.length;
+      const num = session.currentIndex + 1;
+
+      session.lockedCurrent = false;
+      session.examTempSelection = null;
+
+      // Update HUD & Progress Bar
+      document.getElementById("hudProgressText").textContent = `${num} / ${total}`;
+      document.getElementById("hudScoreText").textContent = `${session.score} pts`;
+      document.getElementById("questionCounterPill").textContent = `Question ${num} of ${total}`;
+
+      const pct = Math.round(((session.currentIndex) / total) * 100);
+      document.getElementById("quizProgressBar").style.width = `${pct}%`;
+
+      // Show Mastery Streak badge in Weak Questions Mode
+      const streakPill = document.getElementById("weakStreakPill");
+      if (session.mode === "weak") {
+        const weakRec = progressData.weakQuestions[q.id] || { streak: 0 };
+        streakPill.style.display = "inline-flex";
+        streakPill.textContent = `Mastery Streak: ${weakRec.streak} / 3`;
+      } else {
+        streakPill.style.display = "none";
+      }
+
+      // Render Question Text
+      document.getElementById("questionText").textContent = q.question;
+
+      // Hide Feedback Banner
+      const fb = document.getElementById("feedbackBanner");
+      fb.className = "feedback-banner";
+
+      // Render Shuffled Options
+      const container = document.getElementById("optionsContainer");
+      container.innerHTML = "";
+
+      q.shuffledOptions.forEach((optObj, idx) => {
+        const letter = LETTERS[idx];
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "option-btn";
+        btn.dataset.optionId = optObj.id;
+        btn.dataset.letter = letter;
+
+        btn.innerHTML = `
+          <span class="option-letter">${letter}</span>
+          <span class="option-text"></span>
+          <span class="option-status-icon" aria-hidden="true"></span>
+        `;
+        btn.querySelector(".option-text").textContent = optObj.text;
+
+        btn.addEventListener("click", () => handleOptionSelect(optObj, letter, btn));
+        container.appendChild(btn);
+      });
+
+      // Configure Next / Submit Button
+      const nextBtn = document.getElementById("nextQuestionBtn");
+      nextBtn.disabled = true;
+      const isLast = num === total;
+      if (session.mode === "exam") {
+        nextBtn.textContent = isLast ? "Submit Exam →" : "Save & Next →";
+      } else {
+        nextBtn.textContent = isLast ? "View Results →" : "Next Question →";
+      }
+    }
+
+    /**
+     * Handles selecting an option.
+     * CRITICAL VALIDATION: Always compares `selectedOptionObj.id === q.correctOptionId`
+     * (never relies on A/B/C/D letter positions).
+     */
+    function handleOptionSelect(selectedOptionObj, selectedLetter, clickedBtn) {
+      const q = session.questions[session.currentIndex];
+      const isInstant = MODE_META[session.mode].instantFeedback;
+
+      // EXAM MODE: Select option silently, no feedback until exam ends
+      if (!isInstant) {
+        SoundFX.click();
+        session.examTempSelection = {
+          optionObj: selectedOptionObj,
+          letter: selectedLetter
+        };
+        document.querySelectorAll("#optionsContainer .option-btn").forEach((b) => {
+          b.classList.toggle("exam-selected", b === clickedBtn);
+        });
+        document.getElementById("nextQuestionBtn").disabled = false;
+        return;
+      }
+
+      // PRACTICE / QUICK / WEAK MODE: Lock immediately & show feedback
+      if (session.lockedCurrent) return;
+      session.lockedCurrent = true;
+
+      const isCorrect = selectedOptionObj.id === q.correctOptionId;
+      const correctIdx = q.shuffledOptions.findIndex((o) => o.id === q.correctOptionId);
+      const correctLetter = LETTERS[correctIdx];
+      const correctText = q.shuffledOptions[correctIdx].text;
+
+      if (isCorrect) {
+        session.score += 1;
+        SoundFX.correct();
+      } else {
+        SoundFX.wrong();
+      }
+
+      // Record answer & update weak questions / history immediately
+      recordSingleAnswer(q, selectedOptionObj, selectedLetter, correctLetter, isCorrect);
+
+      // Update live HUD score & progress bar
+      document.getElementById("hudScoreText").textContent = `${session.score} pts`;
+      const pctDone = Math.round(((session.currentIndex + 1) / session.questions.length) * 100);
+      document.getElementById("quizProgressBar").style.width = `${pctDone}%`;
+
+      // Style all option buttons
+      const allBtns = document.querySelectorAll("#optionsContainer .option-btn");
+      allBtns.forEach((btn) => {
+        btn.disabled = true;
+        const optId = btn.dataset.optionId;
+        const iconSpan = btn.querySelector(".option-status-icon");
+
+        if (optId === q.correctOptionId) {
+          btn.classList.add("is-correct");
+          iconSpan.textContent = "✓";
+        } else if (optId === selectedOptionObj.id && !isCorrect) {
+          btn.classList.add("is-wrong");
+          iconSpan.textContent = "✕";
+        } else {
+          btn.classList.add("dimmed");
+        }
+      });
+
+      // Display Feedback Banner
+      const fb = document.getElementById("feedbackBanner");
+      const fbIcon = document.getElementById("feedbackIcon");
+      const fbTitle = document.getElementById("feedbackTitle");
+      const fbDetail = document.getElementById("feedbackDetail");
+
+      if (isCorrect) {
+        fb.className = "feedback-banner show correct";
+        fbIcon.textContent = "✅";
+        fbTitle.textContent = "Correct! (+1 Point)";
+        if (session.mode === "weak") {
+          const rec = progressData.weakQuestions[q.id];
+          if (!rec) {
+            fbDetail.textContent = "Mastered! 3 consecutive correct answers achieved — removed from Weak Questions.";
+            document.getElementById("weakStreakPill").textContent = "Mastered! (3 / 3)";
+            showToast("🎉 Question mastered & cleared from Weak List!");
+          } else {
+            fbDetail.textContent = `Great recall! Weak-mode streak is now ${rec.streak} / 3.`;
+            document.getElementById("weakStreakPill").textContent = `Mastery Streak: ${rec.streak} / 3`;
+          }
+        } else {
+          fbDetail.textContent = `Verified answer: ${correctLetter}. ${correctText}`;
+        }
+      } else {
+        fb.className = "feedback-banner show wrong";
+        fbIcon.textContent = "❌";
+        fbTitle.textContent = "Incorrect (0 Points)";
+        fbDetail.textContent = `Correct Answer: ${correctLetter}. ${correctText}`;
+        if (session.mode === "weak") {
+          document.getElementById("weakStreakPill").textContent = "Mastery Streak: 0 / 3";
+        }
+      }
+
+      document.getElementById("nextQuestionBtn").disabled = false;
+    }
+
+    function recordSingleAnswer(q, selectedOpt, selectedLetter, correctLetter, isCorrect) {
+      session.answers.push({
+        questionId: q.id,
+        questionText: q.question,
+        selectedOptionId: selectedOpt.id,
+        selectedText: selectedOpt.text,
+        selectedLetter,
+        correctOptionId: q.correctOptionId,
+        correctText: q.correctAnswer,
+        correctLetter,
+        isCorrect
+      });
+
+      // Update lifetime stats
+      progressData.practiceProgress.totalAnswered += 1;
+      if (isCorrect) {
+        progressData.practiceProgress.totalCorrect += 1;
+        progressData.correctHistory[q.id] = (progressData.correctHistory[q.id] || 0) + 1;
+
+        // Weak Questions Mode 3-consecutive-correct graduation logic
+        if (session.mode === "weak" && progressData.weakQuestions[q.id]) {
+          progressData.weakQuestions[q.id].streak += 1;
+          if (progressData.weakQuestions[q.id].streak >= 3) {
+            delete progressData.weakQuestions[q.id];
+          }
+        }
+      } else {
+        progressData.practiceProgress.totalIncorrect += 1;
+        progressData.incorrectHistory[q.id] = (progressData.incorrectHistory[q.id] || 0) + 1;
+
+        // Add to weak questions or reset streak to 0
+        const existing = progressData.weakQuestions[q.id];
+        progressData.weakQuestions[q.id] = {
+          streak: 0,
+          wrongCount: existing ? existing.wrongCount + 1 : 1,
+          lastMissed: Date.now()
+        };
+      }
+
+      saveProgress();
+    }
+
+    function advanceQuiz() {
+      const q = session.questions[session.currentIndex];
+
+      // In Exam Mode, finalize the chosen option silently when clicking Next/Submit
+      if (session.mode === "exam") {
+        if (!session.examTempSelection) return;
+        const { optionObj, letter } = session.examTempSelection;
+        const isCorrect = optionObj.id === q.correctOptionId;
+        const correctIdx = q.shuffledOptions.findIndex((o) => o.id === q.correctOptionId);
+        const correctLetter = LETTERS[correctIdx];
+
+        if (isCorrect) session.score += 1;
+        recordSingleAnswer(q, optionObj, letter, correctLetter, isCorrect);
+      }
+
+      SoundFX.click();
+
+      if (session.currentIndex + 1 < session.questions.length) {
+        session.currentIndex += 1;
+        renderCurrentQuestion();
+      } else {
+        finishQuiz();
+      }
+    }
+
+    /* ==========================================================================
+       9. FINISH QUIZ & RESULT DASHBOARD
+       ========================================================================== */
+    function finishQuiz() {
+      stopTimer();
+      session.active = false;
+      session.elapsedSeconds = Math.max(1, Math.floor((Date.now() - session.startTime) / 1000));
+
+      const total = session.questions.length;
+      const correct = session.score;
+      const incorrect = total - correct;
+      const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0;
+
+      // Update Global Progress Records
+      progressData.totalAttempts += 1;
+      let isNewRecord = false;
+      if (
+        accuracy > progressData.highestPercentage ||
+        (accuracy === progressData.highestPercentage && correct > progressData.highestScore)
+      ) {
+        progressData.highestScore = correct;
+        progressData.highestScoreOutOf = total;
+        progressData.highestPercentage = accuracy;
+        isNewRecord = true;
+      }
+
+      const attemptRecord = {
+        mode: session.mode,
+        modeLabel: MODE_META[session.mode].label,
+        score: correct,
+        total,
+        accuracy,
+        timeSeconds: session.elapsedSeconds,
+        date: new Date().toISOString()
+      };
+
+      progressData.previousScores.unshift(attemptRecord);
+      if (progressData.previousScores.length > 50) {
+        progressData.previousScores = progressData.previousScores.slice(0, 50);
+      }
+      saveProgress();
+
+      lastResultSnapshot = {
+        ...attemptRecord,
+        incorrect,
+        isNewRecord,
+        answers: [...session.answers]
+      };
+
+      renderResultDashboard(lastResultSnapshot);
+      switchView("view-result");
+
+      if (accuracy === 100) {
+        SoundFX.victory();
+        launchConfetti();
+      }
+    }
+
+    function renderResultDashboard(res) {
+      document.getElementById("resultModePill").textContent = `${res.modeLabel} Complete`;
+
+      let headline = "Solid Training Run!";
+      let sub = "Keep cycling through randomized sessions to lock these concepts into long-term memory.";
+      if (res.accuracy === 100) {
+        headline = "Flawless 100% Mastery! 🏆";
+        sub = "Perfect score! Every randomized question and shuffled option conquered.";
+      } else if (res.accuracy >= 85) {
+        headline = "Elite Cyber Defender!";
+        sub = "Outstanding recall. Drill your remaining weak questions to hit 100%.";
+      } else if (res.accuracy < 60) {
+        headline = "Great Warm-Up — Keep Grinding!";
+        sub = "Your missed questions have been saved to Weak Questions Mode for focused practice.";
+      }
+
+      document.getElementById("resultHeadline").textContent = headline;
+      document.getElementById("resultSubtext").textContent = sub;
+      document.getElementById("newRecordBadge").style.display = res.isNewRecord ? "block" : "none";
+
+      document.getElementById("resTotalScore").textContent = `${res.score} / ${res.total}`;
+      document.getElementById("resCorrect").textContent = res.score;
+      document.getElementById("resIncorrect").textContent = res.incorrect;
+      document.getElementById("resAccuracy").textContent = `${res.accuracy}%`;
+      document.getElementById("resTimeTaken").textContent = formatTime(res.timeSeconds);
+      document.getElementById("resHighestScore").textContent =
+        `${progressData.highestScore} / ${progressData.highestScoreOutOf}`;
+
+      // Animate Circular Score Ring
+      const circle = document.getElementById("scoreRingCircle");
+      const circumference = 2 * Math.PI * 85; // ~534.07
+      circle.style.strokeDasharray = circumference;
+      circle.style.strokeDashoffset = circumference;
+
+      const pctEl = document.getElementById("resultAccuracyBig");
+      pctEl.textContent = "0%";
+
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          const offset = circumference - (res.accuracy / 100) * circumference;
+          circle.style.strokeDashoffset = offset;
+          animateCounter(pctEl, 0, res.accuracy, 950, "%");
+        }, 80);
+      });
+    }
+
+    function animateCounter(el, start, end, duration, suffix = "") {
+      const startTs = performance.now();
+      function step(now) {
+        const progress = Math.min((now - startTs) / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        el.textContent = `${Math.round(start + (end - start) * eased)}${suffix}`;
+        if (progress < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
+
+    /* ==========================================================================
+       10. REVIEW ANSWERS VIEW
+       ========================================================================== */
+    let currentReviewFilter = "all";
+
+    function renderReviewView(filter = "all") {
+      if (!lastResultSnapshot) return;
+      currentReviewFilter = filter;
+
+      document.querySelectorAll("#reviewFilterTabs .filter-tab").forEach((t) => {
+        t.classList.toggle("active", t.dataset.filter === filter);
+      });
+
+      const listEl = document.getElementById("reviewListContainer");
+      listEl.innerHTML = "";
+
+      const filtered = lastResultSnapshot.answers.filter((a) => {
+        if (filter === "correct") return a.isCorrect;
+        if (filter === "wrong") return !a.isCorrect;
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        listEl.innerHTML = `
+          <div class="glass-card panel" style="text-align: center; color: var(--text-secondary);">
+            No questions match this filter.
+          </div>
+        `;
+        return;
+      }
+
+      filtered.forEach((item, idx) => {
+        const card = document.createElement("article");
+        card.className = `glass-card review-item ${item.isCorrect ? "correct" : "wrong"}`;
+
+        card.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
+            <span class="pill pill-purple">Item #${idx + 1} (Bank Q${item.questionId})</span>
+            <span class="pill ${item.isCorrect ? "pill-emerald" : "pill-red"}">
+              ${item.isCorrect ? "✓ Correct (+1)" : "✕ Incorrect (0)"}
+            </span>
+          </div>
+          <div class="review-q-title"></div>
+          <div class="review-ans-row">
+            <div class="review-ans-line ${item.isCorrect ? "correct-ans" : "user-wrong"}">
+              <strong>Your Answer (${item.selectedLetter}):</strong> <span class="u-ans"></span>
+            </div>
+            ${
+              !item.isCorrect
+                ? `<div class="review-ans-line correct-ans">
+                     <strong>Correct Answer (${item.correctLetter}):</strong> <span class="c-ans"></span>
+                   </div>`
+                : ""
+            }
+          </div>
+        `;
+
+        card.querySelector(".review-q-title").textContent = item.questionText;
+        card.querySelector(".u-ans").textContent = item.selectedText;
+        const cAns = card.querySelector(".c-ans");
+        if (cAns) cAns.textContent = item.correctText;
+
+        listEl.appendChild(card);
+      });
+    }
+
+    /* ==========================================================================
+       11. PROGRESS & ANALYTICS VIEW
+       ========================================================================== */
+    function renderProgressView() {
+      const scores = progressData.previousScores;
+      const weakEntries = Object.entries(progressData.weakQuestions);
+
+      document.getElementById("progLifetimeAnswered").textContent =
+        `${progressData.practiceProgress.totalAnswered} Total Answers`;
+      document.getElementById("progAttemptsPill").textContent = `${progressData.totalAttempts} Runs`;
+      document.getElementById("progWeakPill").textContent = `${weakEntries.length} Weak`;
+
+      // Accuracy Bar Chart (last 10 attempts oldest -> newest)
+      const chartEl = document.getElementById("accuracyChartBars");
+      chartEl.innerHTML = "";
+      const recent10 = scores.slice(0, 10).reverse();
+
+      if (recent10.length === 0) {
+        chartEl.innerHTML = `<div style="margin:auto; color:var(--text-muted); font-size:0.9rem;">No completed attempts yet.</div>`;
+      } else {
+        recent10.forEach((run, i) => {
+          const col = document.createElement("div");
+          col.className = "chart-col";
+          col.innerHTML = `
+            <span class="chart-lbl">${run.accuracy}%</span>
+            <div class="chart-bar" style="height: ${Math.max(8, run.accuracy)}%;" title="${run.modeLabel}: ${run.score}/${run.total} (${run.accuracy}%)"></div>
+            <span class="chart-lbl">#${i + 1}</span>
+          `;
+          chartEl.appendChild(col);
+        });
+      }
+
+      // Attempt History List
+      const histEl = document.getElementById("attemptHistoryList");
+      histEl.innerHTML = "";
+      if (scores.length === 0) {
+        histEl.innerHTML = `<div style="color:var(--text-muted); font-size:0.9rem;">Complete a quiz to log your score history here.</div>`;
+      } else {
+        scores.slice(0, 20).forEach((run) => {
+          const d = new Date(run.date);
+          const dateStr = d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+          const row = document.createElement("div");
+          row.className = "history-row";
+          row.innerHTML = `
+            <div>
+              <div style="font-weight:700; font-size:0.92rem;">${run.modeLabel}</div>
+              <div style="font-size:0.78rem; color:var(--text-muted);">${dateStr} • Time: ${formatTime(run.timeSeconds)}</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-family:'JetBrains Mono',monospace; font-weight:700; color:${run.accuracy >= 80 ? "#6ee7b7" : run.accuracy >= 50 ? "#fcd34d" : "#fca5a5"};">
+                ${run.score}/${run.total} (${run.accuracy}%)
+              </div>
+            </div>
+          `;
+          histEl.appendChild(row);
+        });
+      }
+
+      // Weak Questions List
+      const weakEl = document.getElementById("weakQuestionsList");
+      weakEl.innerHTML = "";
+      if (weakEntries.length === 0) {
+        weakEl.innerHTML = `<div style="color:#6ee7b7; font-size:0.9rem;">✨ Zero weak questions! Your mastery queue is clean.</div>`;
+      } else {
+        weakEntries.forEach(([qIdStr, meta]) => {
+          const qObj = QUESTION_BANK.find((q) => q.id === Number(qIdStr));
+          if (!qObj) return;
+          const row = document.createElement("div");
+          row.className = "weak-item-row";
+          row.innerHTML = `
+            <div style="font-size:0.88rem; font-weight:600;"></div>
+            <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.76rem; color:var(--text-secondary);">
+              <span>Missed ${meta.wrongCount}x</span>
+              <span class="streak-dots" title="Consecutive correct in Weak Mode: ${meta.streak}/3">
+                <span style="margin-right:4px;">Streak:</span>
+                <span class="streak-dot ${meta.streak >= 1 ? "filled" : ""}"></span>
+                <span class="streak-dot ${meta.streak >= 2 ? "filled" : ""}"></span>
+                <span class="streak-dot ${meta.streak >= 3 ? "filled" : ""}"></span>
+              </span>
+            </div>
+          `;
+          row.firstElementChild.textContent = qObj.question;
+          weakEl.appendChild(row);
+        });
+      }
+    }
+
+    /* ==========================================================================
+       12. EVENT LISTENERS & KEYBOARD SHORTCUTS
+       ========================================================================== */
+    function bindEvents() {
+      // Brand home click
+      document.getElementById("brandHomeBtn").addEventListener("click", () => {
+        if (session.active) {
+          confirmExitQuiz();
+        } else {
+          renderDashboard();
+          switchView("view-dashboard");
+        }
+      });
+
+      // Sound toggle
+      document.getElementById("soundToggleBtn").addEventListener("click", () => {
+        progressData.soundEnabled = !progressData.soundEnabled;
+        saveProgress();
+        updateSoundButtonUI();
+        if (progressData.soundEnabled) SoundFX.click();
+      });
+
+      // Navigation to Progress
+      const goProgress = () => {
+        if (session.active) {
+          confirmExitQuiz(() => {
+            renderProgressView();
+            switchView("view-progress");
+          });
+          return;
+        }
+        SoundFX.click();
+        renderProgressView();
+        switchView("view-progress");
+      };
+      document.getElementById("navProgressBtn").addEventListener("click", goProgress);
+      document.getElementById("dashViewProgressBtn").addEventListener("click", goProgress);
+
+      // Dashboard Mode Buttons
+      document.getElementById("heroStartPracticeBtn").addEventListener("click", () => startQuiz("practice"));
+      document.getElementById("heroQuickBtn").addEventListener("click", () => startQuiz("quick"));
+      document.querySelectorAll("[data-start-mode]").forEach((btn) => {
+        btn.addEventListener("click", () => startQuiz(btn.dataset.startMode));
+      });
+
+      // Quiz Controls
+      document.getElementById("nextQuestionBtn").addEventListener("click", advanceQuiz);
+      document.getElementById("quitQuizBtn").addEventListener("click", () => confirmExitQuiz());
+
+      // Result Controls
+      document.getElementById("retryQuizBtn").addEventListener("click", () => {
+        if (lastResultSnapshot) startQuiz(lastResultSnapshot.mode);
+      });
+      document.getElementById("reviewAnswersBtn").addEventListener("click", () => {
+        SoundFX.click();
+        renderReviewView("all");
+        switchView("view-review");
+      });
+      document.getElementById("resultBackDashBtn").addEventListener("click", () => {
+        SoundFX.click();
+        renderDashboard();
+        switchView("view-dashboard");
+      });
+
+      // Review Controls
+      document.querySelectorAll("#reviewFilterTabs .filter-tab").forEach((tab) => {
+        tab.addEventListener("click", () => renderReviewView(tab.dataset.filter));
+      });
+      document.getElementById("reviewBackResultBtn").addEventListener("click", () => switchView("view-result"));
+      document.getElementById("reviewBackDashBtn").addEventListener("click", () => {
+        renderDashboard();
+        switchView("view-dashboard");
+      });
+
+      // Progress Controls
+      document.getElementById("progressBackDashBtn").addEventListener("click", () => {
+        renderDashboard();
+        switchView("view-dashboard");
+      });
+      document.getElementById("progPracticeWeakBtn").addEventListener("click", () => startQuiz("weak"));
+      document.getElementById("resetProgressBtn").addEventListener("click", () => {
+        openModal({
+          title: "Reset All Saved Progress?",
+          message:
+            "This will permanently clear your total attempts, highest score, score history, and weak questions queue from LocalStorage.",
+          buttons: [
+            { label: "Cancel", className: "btn-secondary" },
+            {
+              label: "Yes, Reset Everything",
+              className: "btn-danger",
+              onClick: () => {
+                progressData = createDefaultProgress();
+                saveProgress();
+                renderDashboard();
+                renderProgressView();
+                showToast("Progress reset cleanly.");
+              }
+            }
+          ]
+        });
+      });
+
+      // Close modal when clicking backdrop
+      document.getElementById("customModal").addEventListener("click", (e) => {
+        if (e.target.id === "customModal") closeModal();
+      });
+
+      // Keyboard Shortcuts during active quiz
+      document.addEventListener("keydown", (e) => {
+        if (!session.active) return;
+        if (document.getElementById("customModal").classList.contains("open")) return;
+
+        const key = e.key.toUpperCase();
+        const keyMap = { A: 0, B: 1, C: 2, D: 3, "1": 0, "2": 1, "3": 2, "4": 3 };
+
+        if (key in keyMap) {
+          const btns = document.querySelectorAll("#optionsContainer .option-btn");
+          const target = btns[keyMap[key]];
+          if (target && !target.disabled) target.click();
+        } else if (e.key === "Enter" || e.key === "ArrowRight") {
+          const nextBtn = document.getElementById("nextQuestionBtn");
+          if (!nextBtn.disabled) nextBtn.click();
+        }
+      });
+    }
+
+    function confirmExitQuiz(afterExit = null) {
+      openModal({
+        title: "Exit Current Quiz?",
+        message: "Your current in-progress attempt will end and won't be counted as a completed session.",
+        buttons: [
+          { label: "Continue Quiz", className: "btn-primary" },
+          {
+            label: "Exit to Dashboard",
+            className: "btn-danger",
+            onClick: () => {
+              stopTimer();
+              session.active = false;
+              if (afterExit) {
+                afterExit();
+              } else {
+                renderDashboard();
+                switchView("view-dashboard");
+              }
+            }
+          }
+        ]
+      });
+    }
+
+    /* ==========================================================================
+       13. SELF-VERIFICATION & BOOTSTRAP
+       ========================================================================== */
+    function runBankIntegritySelfTest() {
+      // Verifies all 40 questions & confirms shuffled answer validation is 100% accurate
+      if (QUESTION_BANK.length !== 40) {
+        console.error("Expected 40 questions, found:", QUESTION_BANK.length);
+        return;
+      }
+      for (const q of QUESTION_BANK) {
+        const shuffled = fisherYatesShuffle(q.options);
+        const found = shuffled.find((o) => o.id === q.correctOptionId);
+        if (!found || found.text !== q.correctAnswer) {
+          console.error(`Validation failed on Q${q.id}`);
+        }
+      }
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      runBankIntegritySelfTest();
+      bindEvents();
+      renderDashboard();
+    });
+  </script>
+</body>
+</html>
